@@ -1,0 +1,20 @@
+# Compiled Python files
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# IDE and editor specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+
+# Logs and backups
+*.log
+*.bak
+*.swp
+
+# Environment-specific settings
+.env
