@@ -2,10 +2,10 @@ import cv2
 import pygame
 import time
 
-MP4_FILE = "REBOOT_2_THE_NET.mp4" 
+MP4_FILE = "DOCTOR_WHO_2_STATE_OF_DECAY.mp4" 
 DELAY_BETWEEN_FRAMES = 1
-FRAMES_INCREMENT = 100
-SCALE_IMAGE = False
+FRAMES_INCREMENT = 10
+SCALE_IMAGE = True
 
 def extract_frame(video_filename, frame_number, output_filename):
     # Open the video file
@@ -67,6 +67,7 @@ display_info = pygame.display.Info()
 screen = pygame.display.set_mode((display_info.current_w, display_info.current_h), pygame.FULLSCREEN)
 screen_width = display_info.current_w
 screen_height = display_info.current_h
+print(f'Screen width: {screen_width} height: {screen_height}')
 
 # Loop to extract and display the frames
 while frame <= total_frames:
