@@ -10,6 +10,7 @@ MP4_FILE = "DOCTOR_WHO_2_STATE_OF_DECAY.mp4"
 DELAY_BETWEEN_FRAMES = 1
 FRAMES_INCREMENT = 10
 SCALE_IMAGE = True
+DEBUG = False
 
 def extract_frame(video_filename, frame_number, output_filename):
     # Open the video file
@@ -91,6 +92,8 @@ while True:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     stop = True
+
+        # If the user pressed ESC, exit the frame playing loop and stop the program
         if stop:
             break
 
@@ -123,11 +126,13 @@ while True:
             scaled_width = int(image.get_width()) * scale_factor
             scaled_height = int(image.get_height()) * scale_factor
 
-            print(f"*** image width: {image.get_width()} height: {image.get_height()}")
+            if DEBUG:
+                print(f"*** image width: {image.get_width()} height: {image.get_height()}")
 
             scaled_image = pygame.transform.scale(image, (scaled_width, scaled_height))
 
-            print(f"*** scaled_image width: {scaled_width} height: {scaled_height}")
+            if DEBUG:
+                print(f"*** scaled_image width: {scaled_width} height: {scaled_height}")
 
             # With the image centered, make sure the sides are black
             screen.fill(BLACK_RGB)
@@ -151,12 +156,10 @@ while True:
         # wait before displaying the next frame
         time.sleep(DELAY_BETWEEN_FRAMES)
 
+    # If the user pressed ESC exit the forever loop to stop the program
     if stop:
         break
 
+    print(f"Playing {MP4_FILE} from the beginning")
+
 pygame.quit()
-
-
-
-
-
