@@ -1,6 +1,7 @@
 # Compiled Python files
 __pycache__/
 *.pyc
+*.py~
 
 # Virtual environment
 venv/
@@ -18,3 +19,8 @@ venv/
 
 # Environment-specific settings
 .env
+
+# Multimedia files
+*.jpg
+*.mp4
+
