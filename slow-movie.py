@@ -61,10 +61,6 @@ def extract_frame(video_filename, frame_number, output_filename):
 print("Initializing PyGame...")
 pygame.init()
 
-# Initialize the loop variables
-total_frames = 1   # set up for just the first time through the loop
-frame = 1
-
 # Set up the display
 print("Setting up the display...")
 display_info = pygame.display.Info()
@@ -76,10 +72,12 @@ print(f'Screen width: {screen_width} height: {screen_height}')
 
 
 # Loop forever - when the movie ends, start it again. Pressing ESC will stop
-total_frame = 1 # set up for just the first time through the playing loop
-frame = 1
+
 
 while True:
+    # Initialize the loop variables
+    total_frames = 1   # set up for just the first time through the movie playing loop
+    frame = 1
 
     # Loop to extract and display the frames
     while frame <= total_frames:
