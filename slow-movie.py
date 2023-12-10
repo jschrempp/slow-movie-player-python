@@ -79,6 +79,8 @@ while True:
     total_frames = 1   # set up for just the first time through the movie playing loop
     frame = 1
 
+    print(f"Playing {MP4_FILE}...")
+
     # Loop to extract and display the frames
     while frame <= total_frames:
 
@@ -96,8 +98,9 @@ while True:
             break
 
         # Extract the frame
-        print(f"Extracting frame {frame}...")
         total_frames = extract_frame(MP4_FILE, frame, "output_frame.jpg")
+        percent_played = int(frame / total_frames)
+        print(f"Displaying frame {frame} of {total_frames}. {percent_played}% played.")
 
         # Display the frame
         image = pygame.image.load('output_frame.jpg')
@@ -112,11 +115,13 @@ while True:
             # Determine the scaling factor
             if image_aspect_ratio > screen_aspect_ratio:
                 # Fit by width
-                print("Fit by width")
+                if frame == 1:  # only print this once
+                    print("Scaling using fit by width")
                 scale_factor = screen_width / image.get_width()
             else:
                 # Fit by height
-                print("Fit by height")
+                if frame == 1:  # only print this once
+                    print("Scaling using fit by height")
                 scale_factor = screen_height / image.get_height()
 
             # Scale the image to fit the screen
@@ -125,18 +130,18 @@ while True:
             scaled_height = int(image.get_height()) * scale_factor
 
             if DEBUG:
-                print(f"*** image width: {image.get_width()} height: {image.get_height()}")
+                print(f"Image width: {image.get_width()} height: {image.get_height()}")
 
             scaled_image = pygame.transform.scale(image, (scaled_width, scaled_height))
 
             if DEBUG:
-                print(f"*** scaled_image width: {scaled_width} height: {scaled_height}")
-
-            # With the image centered, make sure the sides are black
-            screen.fill(BLACK_RGB)
+                print(f"Scaled_image width: {scaled_width} height: {scaled_height}")
 
             # Determine where to place the scaled image so it's centered on the screen
             centered_width_position = int((screen_width - scaled_width)/2)
+            
+            # With the image centered, make the sides black
+            screen.fill(BLACK_RGB)
 
             # Blit the scaled image onto the screen surface
             screen.blit(scaled_image, (centered_width_position, 0))
@@ -157,7 +162,5 @@ while True:
     # If the user pressed ESC exit the forever loop to stop the program
     if stop:
         break
-
-    print(f"Playing {MP4_FILE} from the beginning")
 
 pygame.quit()
