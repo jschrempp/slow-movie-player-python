@@ -44,12 +44,14 @@ def extract_frame(video_filename, frame_number, output_filename):
     cv2.imwrite(output_filename, frame)
 
     frame_aspect_ratio = frame.shape[1] / frame.shape[0]
-    print(f"frame height={frame.shape[0]} width={frame.shape[1]} aspect ratio={frame_aspect_ratio}")
+    if DEBUG:
+        print(f"frame height={frame.shape[0]} width={frame.shape[1]} aspect ratio={frame_aspect_ratio}")
 
     # Release the video file
     cap.release()
 
-    # print(f"Frame {frame_number} extracted and saved to {output_filename}.")
+    if DEBUG:
+        print(f"Frame {frame_number} extracted and saved to {output_filename}.")
 
     return total_frames
 
@@ -70,16 +72,17 @@ screen_width = display_info.current_w
 screen_height = display_info.current_h
 print(f'Screen width: {screen_width} height: {screen_height}')
 
+# Count the number of times the movie has been played
+movie_played = 0
 
 # Loop forever - when the movie ends, start it again. Pressing ESC will stop
-
-
 while True:
     # Initialize the loop variables
     total_frames = 1   # set up for just the first time through the movie playing loop
     frame = 1
-
-    print(f"Playing {MP4_FILE}...")
+    
+    movie_played += 1
+    print(f"Playing {MP4_FILE}. Iteration {movie_played}.")
 
     # Loop to extract and display the frames
     while frame <= total_frames:
@@ -100,7 +103,7 @@ while True:
         # Extract the frame
         total_frames = extract_frame(MP4_FILE, frame, "output_frame.jpg")
         percent_played = int(frame / total_frames)
-        print(f"Displaying frame {frame} of {total_frames}. {percent_played}% played.")
+        print(f"Playback {movie_played} displaying frame {frame} of {total_frames}. {percent_played}% played.")
 
         # Display the frame
         image = pygame.image.load('output_frame.jpg')
@@ -110,7 +113,8 @@ while True:
             # Calculate the aspect ratio of the image and the screen
             image_aspect_ratio = image.get_width() / image.get_height()
             screen_aspect_ratio = screen_width / screen_height
-            print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
+            if frame == 1:  # only print this once
+                print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
 
             # Determine the scaling factor
             if image_aspect_ratio > screen_aspect_ratio:
