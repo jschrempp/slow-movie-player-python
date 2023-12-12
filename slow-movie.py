@@ -102,7 +102,7 @@ while True:
 
         # Extract the frame
         total_frames = extract_frame(MP4_FILE, frame, "output_frame.jpg")
-        percent_played = int(frame / total_frames) * 100
+        percent_played = int((frame / total_frames) * 100)
         print(f"Playback {movie_played} displaying frame {frame} of {total_frames}. {percent_played}% played.")
 
         # Display the frame
