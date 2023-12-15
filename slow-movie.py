@@ -10,7 +10,7 @@ MP4_FILE = "DOCTOR_WHO_2_STATE_OF_DECAY.mp4"
 DELAY_BETWEEN_FRAMES = 1
 FRAMES_INCREMENT = 10
 SCALE_IMAGE = True
-DEBUG = False
+DEBUG = True
 
 def extract_frame(video_filename, frame_number, output_filename):
     # Open the video file
@@ -59,6 +59,27 @@ def extract_frame(video_filename, frame_number, output_filename):
 
 # total_frames = extract_frame(MP4_FILE, 5000, "output_frame.jpg")
 
+
+def add_text_to_image(image, left_text, right_text, font_size=24, text_color=(255, 255, 255)):
+    
+    # Create a font
+    font = pygame.font.Font(None, font_size)
+    
+    # Render the text
+    image_rect = image.get_rect()
+    
+    text_surface_left = font.render(left_text, True, text_color)
+    text_rect_left = text_surface_left.get_rect()
+    text_rect_left.bottomleft = image_rect.bottomleft
+    
+    text_surface_right = font.render(right_text, True, text_color)
+    text_rect_right = text_surface_right.get_rect()
+    text_rect_right.bottomright = image_rect.bottomright
+    
+    # Blit the text onto the image
+    image.blit(text_surface_left, text_rect_left)
+    image.blit(text_surface_right, text_rect_right)
+
 # Initialize PyGame
 print("Initializing PyGame...")
 pygame.init()
@@ -103,11 +124,12 @@ while True:
         # Extract the frame
         total_frames = extract_frame(MP4_FILE, frame, "output_frame.jpg")
         percent_played = int((frame / total_frames) * 100)
-        print(f"Playback {movie_played} displaying frame {frame} of {total_frames}. {percent_played}% played.")
+        frame_message = f"Playback {movie_played:,} Frame {frame:,} of {total_frames:,} ({percent_played}%)"
+        print(MP4_FILE, frame_message)
 
         # Display the frame
         image = pygame.image.load('output_frame.jpg')
-
+        
         if SCALE_IMAGE:
 
             # Calculate the aspect ratio of the image and the screen
@@ -137,9 +159,10 @@ while True:
                 print(f"Image width: {image.get_width()} height: {image.get_height()}")
 
             scaled_image = pygame.transform.scale(image, (scaled_width, scaled_height))
-
+            
             if DEBUG:
                 print(f"Scaled_image width: {scaled_width} height: {scaled_height}")
+                add_text_to_image(scaled_image, MP4_FILE, frame_message)
 
             # Determine where to place the scaled image so it's centered on the screen
             centered_width_position = int((screen_width - scaled_width)/2)
