@@ -1,16 +1,38 @@
 import cv2
+import os
 import pygame
+import sys
 import time
 
 BLACK_RGB = (0, 0, 0)
-
+RED_RGB   = (255, 0, 0)
 
 # Configuration settings
-MP4_FILE = "DOCTOR_WHO_2_STATE_OF_DECAY.mp4" 
+MP4_FILE = "CORPSE_BRIDE.mp4" 
 DELAY_BETWEEN_FRAMES = 1
 FRAMES_INCREMENT = 10
 SCALE_IMAGE = True
 DEBUG = True
+
+def calculate_time_to_play(number_of_frames, time_between_frames, frames_per_iteration):
+    seconds = (number_of_frames * time_between_frames) / frames_per_iteration
+    minutes = seconds / 60
+    hours   = minutes / 60
+    days    = hours   / 24
+    
+    # Return the time units that will be easiest for the user to understand
+    if days > 1:
+        return days, "days"
+    elif hours > 1:
+        return hours, "hours"
+    elif minutes > 1:
+        return minutes, "minutes"
+    else:
+        return seconds, "seconds"
+    
+    
+    
+    return playing_time_seconds, playing_time_minutes, playing_time_hours, playing_time_days
 
 def extract_frame(video_filename, frame_number, output_filename):
     # Open the video file
@@ -26,7 +48,7 @@ def extract_frame(video_filename, frame_number, output_filename):
 
     # Check if the specified frame number is valid
     if frame_number < 0 or frame_number >= total_frames:
-        print("Error: Invalid frame number.")
+        print("Error: Invalid frame number: {frame_number:,}. Total frames:{total_frames:,}")
         return
 
     # Set the frame number to the desired frame
@@ -60,10 +82,10 @@ def extract_frame(video_filename, frame_number, output_filename):
 # total_frames = extract_frame(MP4_FILE, 5000, "output_frame.jpg")
 
 
-def add_text_to_image(image, left_text, right_text, font_size=24, text_color=(255, 255, 255)):
-    
+def add_text_to_image(image, left_text, right_text, font_size=20, text_color=(255, 255, 255)):    
     # Create a font
-    font = pygame.font.Font(None, font_size)
+    # font = pygame.font.Font(None, font_size)
+    font = pygame.font.SysFont('arial', font_size)
     
     # Render the text
     image_rect = image.get_rect()
@@ -79,6 +101,11 @@ def add_text_to_image(image, left_text, right_text, font_size=24, text_color=(25
     # Blit the text onto the image
     image.blit(text_surface_left, text_rect_left)
     image.blit(text_surface_right, text_rect_right)
+    
+# exit if the file to play can't be found
+if not(os.path.exists(MP4_FILE)):
+    print(f"{MP4_FILE} can not be found!")
+    sys.exit()
 
 # Initialize PyGame
 print("Initializing PyGame...")
@@ -123,6 +150,12 @@ while True:
 
         # Extract the frame
         total_frames = extract_frame(MP4_FILE, frame, "output_frame.jpg")
+        # Print the playing time once
+        if frame == 1:
+            duration, duration_units = calculate_time_to_play(total_frames, DELAY_BETWEEN_FRAMES, FRAMES_INCREMENT)
+            playing_time = f"{duration:,.2f} {duration_units}"
+            print(f"Time to play: {playing_time}")
+        # Construct the status message
         percent_played = int((frame / total_frames) * 100)
         frame_message = f"Playback {movie_played:,} Frame {frame:,} of {total_frames:,} ({percent_played}%)"
         print(MP4_FILE, frame_message)
@@ -162,7 +195,8 @@ while True:
             
             if DEBUG:
                 print(f"Scaled_image width: {scaled_width} height: {scaled_height}")
-                add_text_to_image(scaled_image, MP4_FILE, frame_message)
+                file_info = f"{MP4_FILE} ({playing_time})"
+                add_text_to_image(scaled_image, file_info, frame_message)
 
             # Determine where to place the scaled image so it's centered on the screen
             centered_width_position = int((screen_width - scaled_width)/2)
@@ -172,11 +206,13 @@ while True:
 
             # Blit the scaled image onto the screen surface
             screen.blit(scaled_image, (centered_width_position, 0))
-
+        
+        # SCALED_IMAGE = False
         else:
-            # for debugging
-            screen.fill((255, 0, 0))
+            # fill screen to red for debugging
+            screen.fill(RED_RGB)
 
+            # Blit the scaled image onto the screen surface
             screen.blit(image, (0,0))
 
         pygame.display.flip()
