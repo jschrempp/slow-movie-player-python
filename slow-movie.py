@@ -38,7 +38,7 @@ def extract_frame(video_filename, frame_number, output_filename):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # Check if the specified frame number is valid
-    if frame_number < 0 or frame_number >= total_frames:
+    if frame_number < 0 or frame_number > total_frames:
         print("Error: Invalid frame number: {frame_number:,}. Total frames:{total_frames:,}")
         return
 
