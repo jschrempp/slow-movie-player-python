@@ -38,7 +38,7 @@ def extract_frame(video_filename, frame_number, output_filename):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # Check if the specified frame number is valid
-    if frame_number < 0 or frame_number > total_frames:
+    if frame_number < 0 or frame_number >= total_frames:
         print("Error: Invalid frame number: {frame_number:,}. Total frames:{total_frames:,}")
         return
 
@@ -101,7 +101,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("filename", help="file name of movie to play")
 parser.add_argument("-d", "--delay", type=int, default=1
     ,help="delay between frames in seconds")
-parser.add_argument("-f", "--frames_increment", default=1
+parser.add_argument("-f", "--frames_increment", type=int, default=1
     ,help='frame increment (frame=1 means play every frame, frame=10 means play every 10 frames)')
 parser.add_argument("-n", "--no_scale", action="store_false"
     ,help="Do not scale movie frames to fit display") 
@@ -157,13 +157,13 @@ movie_played = 0
 while True:
     # Initialize the loop variables
     total_frames = 1   # set up for just the first time through the movie playing loop
-    frame = 1
+    frame = 0
     
     movie_played += 1
     print(f"Playing {mp4_file}. Iteration {movie_played}.")
 
     # Loop to extract and display the frames
-    while frame <= total_frames:
+    while frame < total_frames:
 
         # Check to see if the user wants to quit
         stop = False
@@ -181,7 +181,7 @@ while True:
         # Extract the frame
         total_frames = extract_frame(mp4_file, frame, "output_frame.jpg")
         # Print the playing time once
-        if frame == 1:
+        if frame == 0:
             duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
             playing_time = f"{duration:,.2f} {duration_units}"
             print(f"Time to play: {playing_time}")
@@ -197,18 +197,18 @@ while True:
             # Calculate the aspect ratio of the image and the screen
             image_aspect_ratio = image.get_width() / image.get_height()
             screen_aspect_ratio = screen_width / screen_height
-            if frame == 1:  # only print this once
+            if frame == 0:  # only print this once
                 print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
 
             # Determine the scaling factor
             if image_aspect_ratio > screen_aspect_ratio:
                 # Fit by width
-                if frame == 1:  # only print this once
+                if frame == 0:  # only print this once
                     print("Scaling using fit by width")
                 scale_factor = screen_width / image.get_width()
             else:
                 # Fit by height
-                if frame == 1:  # only print this once
+                if frame == 0:  # only print this once
                     print("Scaling using fit by height")
                 scale_factor = screen_height / image.get_height()
 
