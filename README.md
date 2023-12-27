@@ -6,7 +6,7 @@ Movies can be played at specified frame per unit of time (e.g., one frame per se
 When played at these rates a typical movie can take days or months to display.
 When used with a small 7" or 10" display this makes for an interesting desk display.
 
-This program wasd inspired by (Tom Whitwell's slow movie player)[https://github.com/TomWhitwell/SlowMovie] that used a Raspberry Pi and an e-Ink display.
+This program wasd inspired by Tom Whitwell's slow movie player (https://github.com/TomWhitwell/SlowMovie) that used a Raspberry Pi and an e-Ink display.
 This version is a rewrite that is designed to display on a standard HDMI display.
 
 ## Usage Instructions
