@@ -25,7 +25,7 @@ def calculate_time_to_play(number_of_frames, time_between_frames, frames_per_ite
         return seconds, "seconds"
 
 
-def extract_frame(video_filename, frame_number, output_filename):
+def extract_frame(video_filename, frame_number):
     # Open the video file
     cap = cv2.VideoCapture(video_filename)
 
@@ -46,30 +46,33 @@ def extract_frame(video_filename, frame_number, output_filename):
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
 
     # Read the frame
-    ret, frame = cap.read()
+    ret, frame_original = cap.read()
 
     # Check if the frame was read successfully
     if not ret:
         print("Error: Failed to read frame.")
         return
-
-    # Save the frame to the specified output file
-    cv2.imwrite(output_filename, frame)
+    
+    frame_RGB = cv2.cvtColor(frame_original, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
+    frame_string = frame_RGB.tostring()
+    frame_size = (frame_RGB.shape[1], frame_RGB.shape[0])  # Width, Height
     
     # Release the video file
     cap.release()
 
-    frame_aspect_ratio = frame.shape[1] / frame.shape[0]
-    
     if debug:
-        print(f"frame height={frame.shape[0]} width={frame.shape[1]} aspect ratio={frame_aspect_ratio}")
+        frame_aspect_ratio = frame_RGB.shape[1] / frame_RGB.shape[0]
+        print(f"frame height={frame_RGB.shape[0]} width={frame_RGB.shape[1]} aspect ratio={frame_aspect_ratio}")
+        # Save the frame for debugging
+        output_filename = f"debugframe.jpg"
+        cv2.imwrite(output_filename, frame_original)
         print(f"Frame {frame_number} extracted and saved to {output_filename}.")
 
-    return total_frames
+    return total_frames, frame_string, frame_size
 
 # Example usage:
 
-# total_frames = extract_frame(MP4_FILE, 5000, "output_frame.jpg")
+# total_frames = extract_frame(MP4_FILE, 5000)
 
 
 def add_text_to_image(image, left_text, right_text, font_size=20, text_color=(255, 255, 255)):    
@@ -157,13 +160,13 @@ movie_played = 0
 while True:
     # Initialize the loop variables
     total_frames = 1   # set up for just the first time through the movie playing loop
-    frame = 0
+    frame_number = 0
     
     movie_played += 1
     print(f"Playing {mp4_file}. Iteration {movie_played}.")
 
     # Loop to extract and display the frames
-    while frame < total_frames:
+    while frame_number < total_frames:
 
         # Check to see if the user wants to quit
         stop = False
@@ -179,36 +182,38 @@ while True:
             break
 
         # Extract the frame
-        total_frames = extract_frame(mp4_file, frame, "output_frame.jpg")
+        total_frames, frame_string, frame_size  = extract_frame(mp4_file, frame_number)
+       
         # Print the playing time once
-        if frame == 0:
+        if frame_number == 0:
             duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
             playing_time = f"{duration:,.2f} {duration_units}"
             print(f"Time to play: {playing_time}")
+
         # Construct the status message
-        percent_played = int((frame / total_frames) * 100)
-        frame_message = f"Playback {movie_played:,} Frame {frame:,} of {total_frames:,} ({percent_played}%)"
+        percent_played = int((frame_number / total_frames) * 100)
+        frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
         print(mp4_file, frame_message)
 
-        # Display the frame
-        image = pygame.image.load('output_frame.jpg')
+        # display the frame 
+        image = pygame.image.fromstring(frame_string,frame_size,'RGB',False)
         
         if scale_image:
             # Calculate the aspect ratio of the image and the screen
             image_aspect_ratio = image.get_width() / image.get_height()
             screen_aspect_ratio = screen_width / screen_height
-            if frame == 0:  # only print this once
+            if frame_number == 0:  # only print this once
                 print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
 
             # Determine the scaling factor
             if image_aspect_ratio > screen_aspect_ratio:
                 # Fit by width
-                if frame == 0:  # only print this once
+                if frame_number == 0:  # only print this once
                     print("Scaling using fit by width")
                 scale_factor = screen_width / image.get_width()
             else:
                 # Fit by height
-                if frame == 0:  # only print this once
+                if frame_number == 0:  # only print this once
                     print("Scaling using fit by height")
                 scale_factor = screen_height / image.get_height()
 
@@ -242,7 +247,7 @@ while True:
 
         pygame.display.flip()
 
-        frame += frames_increment
+        frame_number += frames_increment
 
         # wait before displaying the next frame
         time.sleep(delay_between_frames)
