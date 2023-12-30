@@ -120,15 +120,16 @@ def add_text_to_image(image, left_text, right_text, font_size=20, text_color=(25
 # get the configuration from the command line parameters
 
 parser = argparse.ArgumentParser()
-parser.add_argument("filename", help="file name of movie to play",default=None,nargs='?')
+parser.add_argument("filename"
+    , help="file name of movie to play",default=None,nargs='?')
 parser.add_argument("-d", "--delay", type=int, default=1
     ,help="delay between frames in seconds")
 parser.add_argument("-f", "--frames_increment", type=int, default=1
     ,help='frame increment (frame=1 means play every frame, frame=10 means play every 10 frames)')
 parser.add_argument("-n", "--no_scale", action="store_false"
     ,help="Do not scale movie frames to fit display") 
-parser.add_argument("-r", "--random", action="store_true"
-    ,help="Display random frames from random files")
+parser.add_argument("-r", "--random"
+    ,help="Display random frames from random files in a directory", default=None, nargs='?')
 parser.add_argument("-x", "--debug", action="store_true"
     ,help="Display debug messages")
 parser.add_argument("-t", "--test_mode", action="store_true"
@@ -139,7 +140,7 @@ mp4_file = args.filename
 delay_between_frames = args.delay
 frames_increment = args.frames_increment
 scale_image = args.no_scale
-use_random_frame_file = args.random
+use_random_frame_file = args.random   # if None, then this tests false
 debug = args.debug
 test_mode = args.test_mode
 
@@ -148,7 +149,7 @@ if test_mode:
     delay_between_frames = 1
     frames_increment = 10
     scale_image = True 
-    use_random_frame_file = False
+    use_random_frame_file = None
     debug = True 
 
 if debug:
@@ -168,6 +169,10 @@ if not use_random_frame_file:
     # Exit if the file to play can't be found
     if not(os.path.exists(mp4_file)):
         print(f"{mp4_file} can not be found!")
+        sys.exit()
+else:
+    if not(os.path.exists(use_random_frame_file)):
+        print(f"Folder '{use_random_frame_file}' for random videos can not be found!")
         sys.exit()
 
 # Initialize PyGame
@@ -197,10 +202,13 @@ while True:
 
     if use_random_frame_file:
         # choose a random .mp4 file
-        list_of_files = os.listdir()
+        list_of_files = os.listdir(use_random_frame_file)
         # remove non mp4 files
         list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
-        mp4_file = random.choice(list_of_files) 
+        if list_of_files == []:
+            print(f"No mp4 files found in directory '{use_random_frame_file}'")
+            sys.exit()
+        mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
 
     # Get the total number of frames in the video
     total_frames = get_frame_count(mp4_file)
