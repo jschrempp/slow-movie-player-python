@@ -26,6 +26,24 @@ def calculate_time_to_play(number_of_frames, time_between_frames, frames_per_ite
         return seconds, "seconds"
 
 
+def get_frame_count(video_filename):
+    ''' Returns the total number of frames in the video file'''
+    # Open the video file
+    cap = cv2.VideoCapture(video_filename)
+
+    # Check if the video file was opened successfully
+    if not cap.isOpened():
+        print("Error: Could not open video file to check total frames.")
+        return
+
+    # Get the total number of frames in the video
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # Release the video file
+    cap.release()
+
+    return total_frames
+
 def extract_frame(video_filename, frame_number):
     # Open the video file
     cap = cv2.VideoCapture(video_filename)
@@ -69,7 +87,7 @@ def extract_frame(video_filename, frame_number):
         cv2.imwrite(output_filename, frame_original)
         print(f"Frame {frame_number} extracted and saved to {output_filename}.")
 
-    return total_frames, frame_string, frame_size
+    return frame_string, frame_size
 
 # Example usage:
 
@@ -170,18 +188,48 @@ movie_played = 0
 
 # Loop forever - when the movie ends, start it again. Pressing ESC will stop the movie player
 while True:
-    # Initialize the loop variables
-    total_frames = 1   # set up for just the first time through the movie playing loop
+
+    # initialize loop variables
+    play_to_end = True
     frame_number = 0
-    
     movie_played += 1
+    stop = False  # set true to exit forever loop
+
+    if use_random_frame_file:
+        # choose a random .mp4 file
+        list_of_files = os.listdir()
+        # remove non mp4 files
+        list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
+        mp4_file = random.choice(list_of_files) 
+
+    # Get the total number of frames in the video
+    total_frames = get_frame_count(mp4_file)
+
+    if use_random_frame_file:
+        # choose a random frame number
+        # if long file, avoid beginning and end bits
+        avoid_frames = 5*60*24  # five minutes of frames
+        if total_frames > avoid_frames * 2 + 100:
+            # long file
+            frame_number = random.randint(avoid_frames, total_frames-avoid_frames)
+        else:
+            # short file
+            frame_number = random.randint(1, total_frames-1)
+    
     if not use_random_frame_file:
+        # print some stats 
         print(f"Playing {mp4_file}. Iteration {movie_played}.")
+        duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
+        playing_time = f"{duration:,.2f} {duration_units}"
+        print(f"Time to play: {playing_time}")
+
 
     # Loop to extract and display the frames
-    while frame_number < total_frames:
-    # when in random mode total_frames is reset within the while loop
+    while play_to_end and frame_number <= total_frames:
 
+        if use_random_frame_file:
+            # don't loop if random file
+            play_to_end = False
 
         # Check to see if the user wants to quit
         stop = False
@@ -196,30 +244,18 @@ while True:
         if stop:
             break
 
-        # Choose a file if needed
+        # construct the status message
         if use_random_frame_file:
-            # Get a random file from the current directory
-            files = os.listdir()
-            # remove non mp4 files
-            files = [f for f in files if f.endswith(".mp4")]
-            mp4_file = random.choice(files)
+            frame_message = f"Playback {mp4_file} Frame {frame_number:,} of {total_frames:,}"
+        else:            
+            percent_played = int((frame_number / total_frames) * 100)
+            frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
 
-        # Extract the frame
-        total_frames, frame_string, frame_size  = extract_frame(mp4_file, frame_number)
-       
-        # Print the playing time once
-        if frame_number == 0:
-            duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
-            playing_time = f"{duration:,.2f} {duration_units}"
-            print(f"Time to play: {playing_time}")
-
-        # Construct the status message
-        percent_played = int((frame_number / total_frames) * 100)
-        frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
+        # Extract the frame from the video file
+        frame_string, frame_size  = extract_frame(mp4_file, frame_number)        
         print(mp4_file, frame_message)
 
-
-        # display the frame 
+         # display the frame 
         image = pygame.image.fromstring(frame_string,frame_size,'RGB',False)
         
         if scale_image:
