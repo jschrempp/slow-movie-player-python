@@ -36,6 +36,8 @@ options:
                           frame increment (frame=1 means play every frame,
                           frame=10 means play every 10 frames)
     -n, --no_scale        Do not scale movie frames to fit display
+    -r, --random          folder_name holding mp4 files to be played at the
+                          DELAY interval, random file and random frame
     -x, --debug           Display debug messages
     -t, --test_mode       Test mode: delay between frames: 1 second; frame
                           increment: 10; scale image; debug mode on
@@ -54,6 +56,10 @@ Play every 10th frame of movie.mp4 every second
 Play movie.mp4, one frame every minute, with the debug messages (time to play, current frame, total frames, percent played)
 
      python slow-movie.py movie.mp4 --delay 60 --debug
+
+Once a minute display a random frame from a random .mp4 file found in the folder video1
+   
+     python slow-movie.py --delay 60 --random video1
 
 Play movie.mp4 in test mode (delay between frames: 1 second; frame increment: 10; scale image; debug mode on)
 
