@@ -233,7 +233,7 @@ while True:
 
 
     # Loop to extract and display the frames
-    while play_to_end and frame_number <= total_frames:
+    while play_to_end and frame_number < total_frames:
 
         if use_random_frame_file:
             # don't loop if random file
