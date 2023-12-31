@@ -73,7 +73,7 @@ def extract_frame(video_filename, frame_number):
         return
     
     frame_RGB = cv2.cvtColor(frame_original, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
-    frame_string = frame_RGB.tostring()
+    frame_string = frame_RGB.tobytes()
     frame_size = (frame_RGB.shape[1], frame_RGB.shape[0])  # Width, Height
     
     # Release the video file
@@ -233,7 +233,7 @@ while True:
 
 
     # Loop to extract and display the frames
-    while play_to_end and frame_number <= total_frames:
+    while play_to_end and frame_number < total_frames:
 
         if use_random_frame_file:
             # don't loop if random file
@@ -264,7 +264,7 @@ while True:
         print(mp4_file, frame_message)
 
          # display the frame 
-        image = pygame.image.fromstring(frame_string,frame_size,'RGB',False)
+        image = pygame.image.frombytes(frame_string,frame_size,'RGB',False)
         
         if scale_image:
             # Calculate the aspect ratio of the image and the screen
