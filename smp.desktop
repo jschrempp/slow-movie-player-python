@@ -1,13 +1,13 @@
-# EDIT THIS FILE to replace {your user}  and  {your slow movie location}
+# EDIT THIS FILE to replace {your user}
 #
 # Put this on your own desktop for easy way to start 
-#   cp /home/{your user}/{your slow movie location}/smp.desktop /home/{your user}/Desktop/smp.desktop
+#   cp /home/{your user}/slow-movie-player-python/smp.desktop /home/{your user}/Desktop/smp.desktop
 #
 # Before setting up autostart, double click this on the desktop to make sure it 
 # launches the slow movie player correctly. 
 #
 # For autostart on RPi (raspbian 2023-10-10 64 bit) copy this file 
-#   sudo cp /home/{your user}/{your slow movie location}/smp.desktop  /etc/xdg/autostart
+#   sudo cp /home/{your user}/slow-movie-player-python/smp.desktop  /etc/xdg/autostart
 #
 # in the RPi world things might change for autostart. This URL is a good reference.
 # https://forums.raspberrypi.com/viewtopic.php?t=294014 
@@ -18,8 +18,8 @@ Name=Slow Movie Start
 Type=Application
 Comment=Slow Movie
 Categories=Application
-Path=/home/{your user}
-Exec=lxterminal -e "bash /home/{your user}/{your slow movie location}/smp.sh"
+Path=/home/{your user}/slow-movie-player-python
+Exec=lxterminal -e "bash /home/{your user}/slow-movie-player-python/smp.sh"
 Terminal=true
 StartupNotify=false
 X-KeepTerminal=true
