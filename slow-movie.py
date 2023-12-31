@@ -4,6 +4,7 @@ import os
 import pygame
 import sys
 import time
+import random
 
 BLACK_RGB = (0, 0, 0)
 RED_RGB   = (255, 0, 0)
@@ -24,6 +25,24 @@ def calculate_time_to_play(number_of_frames, time_between_frames, frames_per_ite
     else:
         return seconds, "seconds"
 
+
+def get_frame_count(video_filename):
+    ''' Returns the total number of frames in the video file'''
+    # Open the video file
+    cap = cv2.VideoCapture(video_filename)
+
+    # Check if the video file was opened successfully
+    if not cap.isOpened():
+        print("Error: Could not open video file to check total frames.")
+        return
+
+    # Get the total number of frames in the video
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # Release the video file
+    cap.release()
+
+    return total_frames
 
 def extract_frame(video_filename, frame_number):
     # Open the video file
@@ -68,7 +87,7 @@ def extract_frame(video_filename, frame_number):
         cv2.imwrite(output_filename, frame_original)
         print(f"Frame {frame_number} extracted and saved to {output_filename}.")
 
-    return total_frames, frame_string, frame_size
+    return frame_string, frame_size
 
 # Example usage:
 
@@ -101,23 +120,27 @@ def add_text_to_image(image, left_text, right_text, font_size=20, text_color=(25
 # get the configuration from the command line parameters
 
 parser = argparse.ArgumentParser()
-parser.add_argument("filename", help="file name of movie to play")
+parser.add_argument("filename"
+    , help="file name of movie to play",default=None,nargs='?')
 parser.add_argument("-d", "--delay", type=int, default=1
     ,help="delay between frames in seconds")
 parser.add_argument("-f", "--frames_increment", type=int, default=1
     ,help='frame increment (frame=1 means play every frame, frame=10 means play every 10 frames)')
 parser.add_argument("-n", "--no_scale", action="store_false"
     ,help="Do not scale movie frames to fit display") 
+parser.add_argument("-r", "--random"
+    ,help="Display random frames from random files in a directory", default=None, nargs='?')
 parser.add_argument("-x", "--debug", action="store_true"
     ,help="Display debug messages")
 parser.add_argument("-t", "--test_mode", action="store_true"
-    ,help="Test mode: delay between frames: 1 second; frame increment: 10; scale image; debug mode on")
+    ,help="Test mode: delay between frames: 1 second; frame increment: 10; scale image; random off; debug mode on")
 args = parser.parse_args()
 
 mp4_file = args.filename
 delay_between_frames = args.delay
 frames_increment = args.frames_increment
 scale_image = args.no_scale
+use_random_frame_file = args.random   # if None, then this tests false
 debug = args.debug
 test_mode = args.test_mode
 
@@ -126,6 +149,7 @@ if test_mode:
     delay_between_frames = 1
     frames_increment = 10
     scale_image = True 
+    use_random_frame_file = None
     debug = True 
 
 if debug:
@@ -133,12 +157,23 @@ if debug:
     print(f"delay_between_frames={delay_between_frames}")
     print(f"frames_increment={frames_increment}")
     print(f"scale_image={scale_image}")
+    print(f"random_frame_file={use_random_frame_file}")
     print(f"debug={debug}")
 
-# Exit if the file to play can't be found
-if not(os.path.exists(mp4_file)):
-    print(f"{mp4_file} can not be found!")
-    sys.exit()
+# if not random, then file name is required
+if not use_random_frame_file:
+    if mp4_file is None:
+        print("Error: file name is required")
+        sys.exit()
+
+    # Exit if the file to play can't be found
+    if not(os.path.exists(mp4_file)):
+        print(f"{mp4_file} can not be found!")
+        sys.exit()
+else:
+    if not(os.path.exists(use_random_frame_file)):
+        print(f"Folder '{use_random_frame_file}' for random videos can not be found!")
+        sys.exit()
 
 # Initialize PyGame
 print("Initializing PyGame...")
@@ -158,15 +193,51 @@ movie_played = 0
 
 # Loop forever - when the movie ends, start it again. Pressing ESC will stop the movie player
 while True:
-    # Initialize the loop variables
-    total_frames = 1   # set up for just the first time through the movie playing loop
+
+    # initialize loop variables
+    play_to_end = True
     frame_number = 0
-    
     movie_played += 1
-    print(f"Playing {mp4_file}. Iteration {movie_played}.")
+    stop = False  # set true to exit forever loop
+
+    if use_random_frame_file:
+        # choose a random .mp4 file
+        list_of_files = os.listdir(use_random_frame_file)
+        # remove non mp4 files
+        list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
+        if list_of_files == []:
+            print(f"No mp4 files found in directory '{use_random_frame_file}'")
+            sys.exit()
+        mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
+
+    # Get the total number of frames in the video
+    total_frames = get_frame_count(mp4_file)
+
+    if use_random_frame_file:
+        # choose a random frame number
+        # if long file, avoid beginning and end bits
+        avoid_frames = 5*60*24  # five minutes of frames
+        if total_frames > avoid_frames * 2 + 100:
+            # long file
+            frame_number = random.randint(avoid_frames, total_frames-avoid_frames)
+        else:
+            # short file
+            frame_number = random.randint(1, total_frames-1)
+    
+    if not use_random_frame_file:
+        # print some stats 
+        print(f"Playing {mp4_file}. Iteration {movie_played}.")
+        duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
+        playing_time = f"{duration:,.2f} {duration_units}"
+        print(f"Time to play: {playing_time}")
+
 
     # Loop to extract and display the frames
-    while frame_number < total_frames:
+    while play_to_end and frame_number <= total_frames:
+
+        if use_random_frame_file:
+            # don't loop if random file
+            play_to_end = False
 
         # Check to see if the user wants to quit
         stop = False
@@ -181,21 +252,18 @@ while True:
         if stop:
             break
 
-        # Extract the frame
-        total_frames, frame_string, frame_size  = extract_frame(mp4_file, frame_number)
-       
-        # Print the playing time once
-        if frame_number == 0:
-            duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
-            playing_time = f"{duration:,.2f} {duration_units}"
-            print(f"Time to play: {playing_time}")
+        # construct the status message
+        if use_random_frame_file:
+            frame_message = f"Playback {mp4_file} Frame {frame_number:,} of {total_frames:,}"
+        else:            
+            percent_played = int((frame_number / total_frames) * 100)
+            frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
 
-        # Construct the status message
-        percent_played = int((frame_number / total_frames) * 100)
-        frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
+        # Extract the frame from the video file
+        frame_string, frame_size  = extract_frame(mp4_file, frame_number)        
         print(mp4_file, frame_message)
 
-        # display the frame 
+         # display the frame 
         image = pygame.image.fromstring(frame_string,frame_size,'RGB',False)
         
         if scale_image:
@@ -225,7 +293,10 @@ while True:
             if debug:
                 print(f"Image width: {image.get_width()} height: {image.get_height()}")
                 print(f"Scaled_image width: {scaled_width} height: {scaled_height}")
-                file_info = f"{mp4_file} ({playing_time})"
+                if not use_random_frame_file:
+                    file_info = f"{mp4_file} ({playing_time})"
+                else:
+                    file_info = f"{mp4_file}"
                 add_text_to_image(scaled_image, file_info, frame_message)
 
             # Determine where to place the scaled image so it's centered on the screen
