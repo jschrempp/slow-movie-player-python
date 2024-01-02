@@ -311,20 +311,15 @@ while True:
         # do the delay in one second increments 
         # after each second, check to see if the user wants to quit
         for s in range(delay_between_frames):
-            print("************ Sleeping for one second")	
             time.sleep(1)
-            print("Checking to see if user wants to quit")
+
             # Check to see if the user wants to quit
             stop = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    print("pygame.QUIT")
                     stop = True
                 elif event.type == pygame.KEYDOWN:
-                    print("pygame.KEYDOWN")
-                    print(event.key)
                     if event.key == pygame.K_ESCAPE:
-                        print("pygame.K_ESCAPE")
                         stop = True
 
             # If the user pressed ESC, exit the timer loop and stop the program
