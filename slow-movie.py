@@ -5,6 +5,7 @@ import pygame
 import sys
 import time
 import random
+import traceback
 
 BLACK_RGB = (0, 0, 0)
 RED_RGB   = (255, 0, 0)
@@ -191,147 +192,152 @@ print(f'Screen width: {screen_width} height: {screen_height}')
 # Count the number of times the movie has been played
 movie_played = 0
 
-# Loop forever - when the movie ends, start it again. Pressing ESC will stop the movie player
-while True:
+try:
+	# Loop forever - when the movie ends, start it again. Pressing ESC will stop the movie player
+	while True:
+	    # initialize loop variables
+	    play_to_end = True
+	    frame_number = 0
+	    movie_played += 1
+	    stop = False  # set true to exit forever loop
+	
+	    if use_random_frame_file:
+	        # choose a random .mp4 file
+	        list_of_files = os.listdir(use_random_frame_file)
+	        # remove non mp4 files
+	        list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
+	        if list_of_files == []:
+	            print(f"No mp4 files found in directory '{use_random_frame_file}'")
+	            sys.exit()
+	        mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
+	
+	    # Get the total number of frames in the video
+	    total_frames = get_frame_count(mp4_file)
+	
+	    if use_random_frame_file:
+	        # choose a random frame number
+	        # if long file, avoid beginning and end bits
+	        avoid_frames = 5*60*24  # five minutes of frames
+	        if total_frames > avoid_frames * 2 + 100:
+	            # long file
+	            frame_number = random.randint(avoid_frames, total_frames-avoid_frames)
+	        else:
+	            # short file
+	            frame_number = random.randint(1, total_frames-1)
+	    
+	    if not use_random_frame_file:
+	        # print some stats 
+	        print(f"Playing {mp4_file}. Iteration {movie_played}.")
+	        duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
+	        playing_time = f"{duration:,.2f} {duration_units}"
+	        print(f"Time to play: {playing_time}")
+	
+	
+	    # Loop to extract and display the frames
+	    while play_to_end and frame_number < total_frames:
+	
+	        if use_random_frame_file:
+	            # don't loop if random file
+	            play_to_end = False
+	
+	        # construct the status message
+	        if use_random_frame_file:
+	            frame_message = f"Playback {mp4_file} Frame {frame_number:,} of {total_frames:,}"
+	        else:            
+	            percent_played = int((frame_number / total_frames) * 100)
+	            frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
+	
+	        # Extract the frame from the video file
+	        frame_string, frame_size  = extract_frame(mp4_file, frame_number)        
+	        print(mp4_file, frame_message)
+	
+	         # display the frame 
+	        image = pygame.image.frombytes(frame_string,frame_size,'RGB',False)
+	        
+	        if scale_image:
+	            # Calculate the aspect ratio of the image and the screen
+	            image_aspect_ratio = image.get_width() / image.get_height()
+	            screen_aspect_ratio = screen_width / screen_height
+	            if frame_number == 0:  # only print this once
+	                print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
+	
+	            # Determine the scaling factor
+	            if image_aspect_ratio > screen_aspect_ratio:
+	                # Fit by width
+	                if frame_number == 0:  # only print this once
+	                    print("Scaling using fit by width")
+	                scale_factor = screen_width / image.get_width()
+	            else:
+	                # Fit by height
+	                if frame_number == 0:  # only print this once
+	                    print("Scaling using fit by height")
+	                scale_factor = screen_height / image.get_height()
+	
+	            # Scale the image to fit the screen
+	            scaled_width = int(image.get_width()) * scale_factor
+	            scaled_height = int(image.get_height()) * scale_factor
+	            scaled_image = pygame.transform.scale(image, (scaled_width, scaled_height))
+	
+	            if debug:
+	                print(f"Image width: {image.get_width()} height: {image.get_height()}")
+	                print(f"Scaled_image width: {scaled_width} height: {scaled_height}")
+	                if not use_random_frame_file:
+	                    file_info = f"{mp4_file} ({playing_time})"
+	                else:
+	                    file_info = f"{mp4_file}"
+	                add_text_to_image(scaled_image, file_info, frame_message)
+	
+	            # Determine where to place the scaled image so it's centered on the screen
+	            centered_width_position = int((screen_width - scaled_width)/2)
+	            
+	            # With the image centered, make the sides black
+	            screen.fill(BLACK_RGB)
+	
+	            # Blit the scaled image onto the screen surface
+	            screen.blit(scaled_image, (centered_width_position, 0))
+	        
+	        # scaled_image = False
+	        else:
+	            # fill screen to red for debugging
+	            screen.fill(RED_RGB)
+	
+	            # Blit the scaled image onto the screen surface
+	            screen.blit(image, (0,0))
+	
+	        pygame.display.flip()
+	
+	        frame_number += frames_increment
+	
+	        # wait before displaying the next frame
+	        # do the delay in one second increments 
+	        # after each second, check to see if the user wants to quit
+	        for s in range(delay_between_frames):
+	            time.sleep(1)
+	
+	            # Check to see if the user wants to quit
+	            stop = False
+	            for event in pygame.event.get():
+	                if event.type == pygame.QUIT:
+	                    stop = True
+	                elif event.type == pygame.KEYDOWN:
+	                    if event.key == pygame.K_ESCAPE:
+	                        stop = True
+	
+	            # If the user pressed ESC, exit the timer loop and stop the program
+	            if stop:
+	                break    
+	        
+	        # If the user pressed ESC, exit the frame playing loop and stop the program        
+	        if stop:
+	            break        
+	
+	    # If the user pressed ESC exit the forever loop to stop the program
+	    if stop:
+	        break
 
-    # initialize loop variables
-    play_to_end = True
-    frame_number = 0
-    movie_played += 1
-    stop = False  # set true to exit forever loop
-
-    if use_random_frame_file:
-        # choose a random .mp4 file
-        list_of_files = os.listdir(use_random_frame_file)
-        # remove non mp4 files
-        list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
-        if list_of_files == []:
-            print(f"No mp4 files found in directory '{use_random_frame_file}'")
-            sys.exit()
-        mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
-
-    # Get the total number of frames in the video
-    total_frames = get_frame_count(mp4_file)
-
-    if use_random_frame_file:
-        # choose a random frame number
-        # if long file, avoid beginning and end bits
-        avoid_frames = 5*60*24  # five minutes of frames
-        if total_frames > avoid_frames * 2 + 100:
-            # long file
-            frame_number = random.randint(avoid_frames, total_frames-avoid_frames)
-        else:
-            # short file
-            frame_number = random.randint(1, total_frames-1)
-    
-    if not use_random_frame_file:
-        # print some stats 
-        print(f"Playing {mp4_file}. Iteration {movie_played}.")
-        duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
-        playing_time = f"{duration:,.2f} {duration_units}"
-        print(f"Time to play: {playing_time}")
-
-
-    # Loop to extract and display the frames
-    while play_to_end and frame_number < total_frames:
-
-        if use_random_frame_file:
-            # don't loop if random file
-            play_to_end = False
-
-        # construct the status message
-        if use_random_frame_file:
-            frame_message = f"Playback {mp4_file} Frame {frame_number:,} of {total_frames:,}"
-        else:            
-            percent_played = int((frame_number / total_frames) * 100)
-            frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
-
-        # Extract the frame from the video file
-        frame_string, frame_size  = extract_frame(mp4_file, frame_number)        
-        print(mp4_file, frame_message)
-
-         # display the frame 
-        image = pygame.image.frombytes(frame_string,frame_size,'RGB',False)
-        
-        if scale_image:
-            # Calculate the aspect ratio of the image and the screen
-            image_aspect_ratio = image.get_width() / image.get_height()
-            screen_aspect_ratio = screen_width / screen_height
-            if frame_number == 0:  # only print this once
-                print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
-
-            # Determine the scaling factor
-            if image_aspect_ratio > screen_aspect_ratio:
-                # Fit by width
-                if frame_number == 0:  # only print this once
-                    print("Scaling using fit by width")
-                scale_factor = screen_width / image.get_width()
-            else:
-                # Fit by height
-                if frame_number == 0:  # only print this once
-                    print("Scaling using fit by height")
-                scale_factor = screen_height / image.get_height()
-
-            # Scale the image to fit the screen
-            scaled_width = int(image.get_width()) * scale_factor
-            scaled_height = int(image.get_height()) * scale_factor
-            scaled_image = pygame.transform.scale(image, (scaled_width, scaled_height))
-
-            if debug:
-                print(f"Image width: {image.get_width()} height: {image.get_height()}")
-                print(f"Scaled_image width: {scaled_width} height: {scaled_height}")
-                if not use_random_frame_file:
-                    file_info = f"{mp4_file} ({playing_time})"
-                else:
-                    file_info = f"{mp4_file}"
-                add_text_to_image(scaled_image, file_info, frame_message)
-
-            # Determine where to place the scaled image so it's centered on the screen
-            centered_width_position = int((screen_width - scaled_width)/2)
-            
-            # With the image centered, make the sides black
-            screen.fill(BLACK_RGB)
-
-            # Blit the scaled image onto the screen surface
-            screen.blit(scaled_image, (centered_width_position, 0))
-        
-        # scaled_image = False
-        else:
-            # fill screen to red for debugging
-            screen.fill(RED_RGB)
-
-            # Blit the scaled image onto the screen surface
-            screen.blit(image, (0,0))
-
-        pygame.display.flip()
-
-        frame_number += frames_increment
-
-        # wait before displaying the next frame
-        # do the delay in one second increments 
-        # after each second, check to see if the user wants to quit
-        for s in range(delay_between_frames):
-            time.sleep(1)
-
-            # Check to see if the user wants to quit
-            stop = False
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    stop = True
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        stop = True
-
-            # If the user pressed ESC, exit the timer loop and stop the program
-            if stop:
-                break    
-        
-        # If the user pressed ESC, exit the frame playing loop and stop the program        
-        if stop:
-            break        
-
-    # If the user pressed ESC exit the forever loop to stop the program
-    if stop:
-        break
-
+except Exception as e:
+	with open('error.log', 'a') as file:
+		msg = traceback.format_exc()
+		file.write(f"An error occurred:\n {msg}\n")
+	
 pygame.quit()
