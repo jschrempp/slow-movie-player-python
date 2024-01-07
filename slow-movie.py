@@ -127,6 +127,8 @@ parser.add_argument("-d", "--delay", type=int, default=1
     ,help="delay between frames in seconds")
 parser.add_argument("-f", "--frames_increment", type=int, default=1
     ,help='frame increment (frame=1 means play every frame, frame=10 means play every 10 frames)')
+parser.add_argument("-i", "--initial_frame", type=int, default=0
+    ,help="initial frame to display when playing in non-random mode")
 parser.add_argument("-n", "--no_scale", action="store_false"
     ,help="Do not scale movie frames to fit display") 
 parser.add_argument("-r", "--random"
@@ -144,6 +146,7 @@ scale_image = args.no_scale
 use_random_frame_file = args.random   # if None, then this tests false
 debug = args.debug
 test_mode = args.test_mode
+initial_frame = args.initial_frame
 
 # If test mode was specified, override the parameters to the test mode settings
 if test_mode:
@@ -156,6 +159,7 @@ if test_mode:
 if debug:
     print(f"mp4_file={mp4_file}")
     print(f"delay_between_frames={delay_between_frames}")
+    print(f"initial_frame={initial_frame}")
     print(f"frames_increment={frames_increment}")
     print(f"scale_image={scale_image}")
     print(f"random_frame_file={use_random_frame_file}")
@@ -197,7 +201,8 @@ try:
 	while True:
 	    # initialize loop variables
 	    play_to_end = True
-	    frame_number = 0
+	    first_time = True
+	    frame_number = initial_frame
 	    movie_played += 1
 	    stop = False  # set true to exit forever loop
 	
@@ -258,7 +263,7 @@ try:
 	            # Calculate the aspect ratio of the image and the screen
 	            image_aspect_ratio = image.get_width() / image.get_height()
 	            screen_aspect_ratio = screen_width / screen_height
-	            if frame_number == 0:  # only print this once
+	            if first_time:  # only print this once
 	                print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
 	
 	            # Determine the scaling factor
@@ -269,7 +274,7 @@ try:
 	                scale_factor = screen_width / image.get_width()
 	            else:
 	                # Fit by height
-	                if frame_number == 0:  # only print this once
+	                if first_time:  # only print this once
 	                    print("Scaling using fit by height")
 	                scale_factor = screen_height / image.get_height()
 	
@@ -307,6 +312,7 @@ try:
 	        pygame.display.flip()
 	
 	        frame_number += frames_increment
+	        first_time = False
 	
 	        # wait before displaying the next frame
 	        # do the delay in one second increments 

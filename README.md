@@ -22,8 +22,8 @@ Before running the program, make sure to be in the slow-movie-player-python dire
 ```
 python3 slow-movie.py -h
 
-usage: slow-movie.py [-h] [-d DELAY] [-f FRAMES_INCREMENT] [-n] [-x] [-t]
-                     filename
+usage: slow-movie.py [-h] [-d DELAY] [-f FRAMES_INCREMENT] [-i INITIAL_FRAME] [-n] [-r [RANDOM]] [-x] [-t]
+                     [filename]
 
 positional arguments:
     filename              file name of movie to play
@@ -35,6 +35,8 @@ options:
     -f FRAMES_INCREMENT, --frames_increment FRAMES_INCREMENT
                           frame increment (frame=1 means play every frame,
                           frame=10 means play every 10 frames)
+    -i INITIAL_FRAME, --initial_frame INITIAL_FRAME
+                          initial frame to display when playing in non-random mode
     -n, --no_scale        Do not scale movie frames to fit display
     -r, --random          folder_name holding mp4 files to be played at the
                           DELAY interval, random file and random frame
