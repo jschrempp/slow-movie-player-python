@@ -54,6 +54,10 @@ Play movie.mp4 with one frame every minute
 Play every 10th frame of movie.mp4 every second
 
      python slow-movie.py movie.mp4 --delay 1 --frames_increment 10
+     
+Play every 10th frame of movie.mp4 every second starting at frame 42
+
+     python slow-movie.py movie.mp4 --delay 1 --frames_increment 10 --initial_frame 42
 
 Play movie.mp4, one frame every minute, with the debug messages (time to play, current frame, total frames, percent played)
 
