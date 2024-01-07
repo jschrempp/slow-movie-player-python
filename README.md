@@ -25,24 +25,29 @@ python3 slow-movie.py -h
 usage: slow-movie.py [-h] [-d DELAY] [-f FRAMES_INCREMENT] [-i INITIAL_FRAME] [-n] [-r [RANDOM]] [-x] [-t]
                      [filename]
 
+Plays movies frames much slower than normal play or can play random frames from random movies. Great for small
+displays mounted on a wall or sitting on a desk.
+
 positional arguments:
-    filename              file name of movie to play
+  filename              file name of movie to play
 
 options:
-    -h, --help            show this help message and exit
-    -d DELAY, --delay DELAY
-                          delay between frames in seconds
-    -f FRAMES_INCREMENT, --frames_increment FRAMES_INCREMENT
-                          frame increment (frame=1 means play every frame,
-                          frame=10 means play every 10 frames)
-    -i INITIAL_FRAME, --initial_frame INITIAL_FRAME
-                          initial frame to display when playing in non-random mode
-    -n, --no_scale        Do not scale movie frames to fit display
-    -r, --random          folder_name holding mp4 files to be played at the
-                          DELAY interval, random file and random frame
-    -x, --debug           Display debug messages
-    -t, --test_mode       Test mode: delay between frames: 1 second; frame
-                          increment: 10; scale image; debug mode on
+  -h, --help            show this help message and exit
+  -d DELAY, --delay DELAY
+                        delay between frames in seconds
+  -f FRAMES_INCREMENT, --frames_increment FRAMES_INCREMENT
+                        frame increment (frame=1 means play every frame, frame=10 means play every 10 frames)
+  -i INITIAL_FRAME, --initial_frame INITIAL_FRAME
+                        initial frame to display when playing in non-random mode
+  -n, --no_scale        Do not scale movie frames to fit display
+  -r [RANDOM], --random [RANDOM]
+                        Display random frames from random files in a directory
+  -x, --debug           Display debug messages
+  -t, --test_mode       Test mode: delay between frames: 1 second; frame increment: 10; scale image; random off;
+                        debug mode on
+
+More information and source code at https://github.com/makeralchemy/slow-movie-player-python
+
 ```
 
 ### Command Line Examples

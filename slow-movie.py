@@ -120,7 +120,13 @@ def add_text_to_image(image, left_text, right_text, font_size=20, text_color=(25
 
 # get the configuration from the command line parameters
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    description="Plays movies frames much slower than normal \
+        play or can play random frames from random movies. \
+        Great for small displays mounted on a wall or \
+        sitting on a desk."
+    ,epilog="More information and source code at https://github.com/makeralchemy/slow-movie-player-python"
+    )
 parser.add_argument("filename"
     , help="file name of movie to play",default=None,nargs='?')
 parser.add_argument("-d", "--delay", type=int, default=1
