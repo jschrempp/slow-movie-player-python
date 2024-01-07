@@ -24,3 +24,5 @@ venv/
 *.jpg
 *.mp4
 
+# Temporary files
+*.md~
