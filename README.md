@@ -122,7 +122,34 @@ Test to make sure everything is working:
 
 ## Setting Up Automatic Start
 
-TBW
+To setup automatic start you need to edit two files "smp.sh" and "smp.desktop".
+
+First edit "smp.sh":
+1. Replace the two places that say {your user} with your user name. 
+For example, if you setup your Raspberry Pi with the user name "makeralchemy", you would replace {your user} with makeralchemy.
+2. Replace the arguments on the python command line what you want the slow movie player to do.
+3. Save the file.
+
+4. Make the file executable with the command:
+
+       chmod +x smp.sh
+
+Next edit "smp.desktop":
+
+1. Replace the two places that say {your user} with your user name.
+2. Save the file.
+
+4. Put the smp.desktop file on your desktop, using this command and substituting your user name for {your user}. 
+
+       cp /home/{your user}/slow-movie-player-python/smp.desktop /home/{your user}/Desktop/smp.desktop
+
+5. Go to your desktop and you should see an icon called "Slow Movie Start". Double click that icon to verify that you have everything configured properly.
+
+6. If everything works, enable autostart on boot for the Raspberry Pi (raspbian 2023-10-10 64 bit), by copying the "smp.desktop" file to the autostart system folder using the command (subsititute your user name for {your user}): 
+
+       sudo cp /home/{your user}/slow-movie-player-python/smp.desktop  /etc/xdg/autostart
+ 
+On your next reboot, your movie should automatically start playing!
 
 ## License
 This project is licensed under the MIT license.
