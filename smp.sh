@@ -9,5 +9,5 @@
 #    chmod +x smp.sh
 #
 cd /home/{your user}/slow-movie-player-python
-source /home/{your user}/slow-movie-player-python/.venv/bin/activate
+source /home/{your user}/slow-movie-player-python/venv/bin/activate
 python slow-movie.py Test-2s.mp4 --debug --delay 1
