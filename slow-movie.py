@@ -118,6 +118,19 @@ def add_text_to_image(image, left_text, right_text, font_size=20, text_color=(25
     image.blit(text_surface_right, text_rect_right)
 
 
+def choose_random_file(directory, filetype):
+    """ Picks random files of 'filetype' out of a directory. Assumes directory exists. """
+    # choose a random .mp4 file
+    list_of_files = os.listdir(directory)
+    # remove non mp4 files
+    list_of_files = [f for f in list_of_files if f.endswith("." + filetype)]
+    if list_of_files == []:
+        print(f"No mp4 files found in directory '{directory}'")
+        sys.exit()
+    random_mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"   
+    return random_mp4_file
+    
+
 # main execution starts here
 
 # get the configuration from the command line parameters
@@ -263,14 +276,15 @@ try:
  
         # If playing random frames in random files, pick the file to play    
         if use_random_frame_file:
-            # choose a random .mp4 file
-            list_of_files = os.listdir(use_random_frame_file)
-            # remove non mp4 files
-            list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
-            if list_of_files == []:
-                print(f"No mp4 files found in directory '{use_random_frame_file}'")
-                sys.exit()
-            mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
+            mp4_file = choose_random_file(use_random_frame_file, "mp4")
+#            # choose a random .mp4 file
+#            list_of_files = os.listdir(use_random_frame_file)
+#            # remove non mp4 files
+#            list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
+#            if list_of_files == []:
+#                print(f"No mp4 files found in directory '{use_random_frame_file}'")
+#                sys.exit()
+#            mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
 	
         # Get the total number of frames in the video
         total_frames = get_frame_count(mp4_file)
