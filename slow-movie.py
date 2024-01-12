@@ -124,7 +124,10 @@ def choose_random_file(directory, filetype):
         print(f"No .{filetype} files found in directory '{directory}'")
         sys.exit()
     random_mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"  
-    return random_mp4_file
+    # return the random file name and the number of files
+    return random_mp4_file, len(list_of_files)
+
+
     
 
 # main execution starts here
@@ -238,6 +241,9 @@ print(f'Screen width: {screen_width} height: {screen_height}')
 # Count the number of times the movie has been played
 movie_played = 0
 
+# For random mode, the name of the last randomly picked file
+last_random_file = ""
+
 if play_directory:
     next_file_function = get_next_file(play_directory,filetype='mp4')
 
@@ -272,16 +278,13 @@ try:
  
         # If playing random frames in random files, pick the file to play    
         if use_random_frame_file:
-            mp4_file = choose_random_file(use_random_frame_file, "mp4")
-#            # choose a random .mp4 file
-#            list_of_files = os.listdir(use_random_frame_file)
-#            # remove non mp4 files
-#            list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
-#            if list_of_files == []:
-#                print(f"No mp4 files found in directory '{use_random_frame_file}'")
-#                sys.exit()
-#            mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
-	
+            mp4_file, num_random_files = choose_random_file(use_random_frame_file, "mp4")
+            # don't pick the same movie twice in a row
+            if num_random_files > 1:
+                while mp4_file == last_random_file:
+                    mp4_file, _ = choose_random_file(use_random_frame_file, "mp4")
+                last_random_file = mp4_file
+
         # Get the total number of frames in the video
         total_frames = get_frame_count(mp4_file)
 
