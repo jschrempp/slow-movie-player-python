@@ -22,11 +22,9 @@ Before running the program, make sure to be in the slow-movie-player-python dire
 ```
 python3 slow-movie.py -h
 
-usage: slow-movie.py [-h] [-d DELAY] [-f FRAMES_INCREMENT] [-i INITIAL_FRAME] [-n] [-x] [-t] [-m [MP4] | -p [PLAY_DIRECTORY] | -r
-                     [RANDOM]]
+usage: slow-movie.py [-h] [-d DELAY] [-f FRAMES_INCREMENT] [-i INITIAL_FRAME] [-n] [-x] [-t] [-m [MP4] | -p [PLAY_DIRECTORY] | -r [RANDOM]]
 
-Plays movies frames much slower than normal play or can play random frames from random movies. Great for small displays mounted on a wall
-or sitting on a desk.
+Plays movies frames much slower than normal play or can play random frames from random movies. Great for small displays mounted on a wall or sitting on a desk.
 
 options:
   -h, --help            show this help message and exit
@@ -38,8 +36,7 @@ options:
                         initial frame to display when playing the first movie in non-random mode
   -n, --no_scale        Do not scale movie frames to fit display
   -x, --debug           Display debug messages
-  -t, --test_mode       Test mode: delay between frames: 1 second; frame increment: 10; scale image; random off; play directory off;
-                        debug mode on
+  -t, --test_mode       Test mode: delay between frames: 1 second; frame increment: 10; scale image; random off; play directory off; debug mode on
   -m [MP4], --mp4 [MP4]
                         file name of movie to play
   -p [PLAY_DIRECTORY], --play_directory [PLAY_DIRECTORY]
@@ -48,6 +45,7 @@ options:
                         Display random frames from random files in a directory
 
 More information and source code at https://github.com/makeralchemy/slow-movie-player-python
+
 ```
 
 Note that you can only specify one of the --mp4, --random, and --play_directory options. 
