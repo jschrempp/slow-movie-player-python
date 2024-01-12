@@ -7,6 +7,8 @@ import time
 import random
 import traceback
 
+from file_cycler import get_next_file
+
 BLACK_RGB = (0, 0, 0)
 RED_RGB   = (255, 0, 0)
 
@@ -127,25 +129,39 @@ parser = argparse.ArgumentParser(
         sitting on a desk."
     ,epilog="More information and source code at https://github.com/makeralchemy/slow-movie-player-python"
     )
-parser.add_argument("filename"
-    , help="file name of movie to play",default=None,nargs='?')
+
 parser.add_argument("-d", "--delay", type=int, default=1
     ,help="delay between frames in seconds")
 parser.add_argument("-f", "--frames_increment", type=int, default=1
     ,help='frame increment (frame=1 means play every frame, frame=10 means play every 10 frames)')
 parser.add_argument("-i", "--initial_frame", type=int, default=0
-    ,help="initial frame to display when playing in non-random mode")
+    ,help="initial frame to display when playing the first movie in non-random mode")
 parser.add_argument("-n", "--no_scale", action="store_false"
     ,help="Do not scale movie frames to fit display") 
-parser.add_argument("-r", "--random"
-    ,help="Display random frames from random files in a directory", default=None, nargs='?')
 parser.add_argument("-x", "--debug", action="store_true"
     ,help="Display debug messages")
 parser.add_argument("-t", "--test_mode", action="store_true"
-    ,help="Test mode: delay between frames: 1 second; frame increment: 10; scale image; random off; debug mode on")
+    ,help="Test mode: delay between frames: 1 second; frame increment: 10; scale image; random off; play directory off; debug mode on")
+
+# Note that if an argument is not specified in a mutually exclusive group,
+# argparse will default the value to None.
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-m", "--mp4"
+    ,help="file name of movie to play", type=str, nargs='?')
+group.add_argument("-p", "--play_directory"
+    ,help="Play every mp4 in the specified directory in order and repeat forever", type=str, nargs='?')
+group.add_argument("-r", "--random"
+    ,help="Display random frames from random files in a directory", type=str, nargs='?')
+
 args = parser.parse_args()
 
-mp4_file = args.filename
+# if one of the three mutually exclusive options is not specified
+# use parser.error to display an error message and stop the program
+if not any([args.mp4, args.play_directory, args.random]):
+    parser.error("One of --mp4, --play_directory, or --random must be specified with the name of a file or folder")
+
+# Extract the values from the command arguments
+mp4_file = args.mp4
 delay_between_frames = args.delay
 frames_increment = args.frames_increment
 scale_image = args.no_scale
@@ -153,6 +169,7 @@ use_random_frame_file = args.random   # if None, then this tests false
 debug = args.debug
 test_mode = args.test_mode
 initial_frame = args.initial_frame
+play_directory = args.play_directory # if None, then this tests false
 
 # If test mode was specified, override the parameters to the test mode settings
 if test_mode:
@@ -160,8 +177,10 @@ if test_mode:
     frames_increment = 10
     scale_image = True 
     use_random_frame_file = None
+    play_directory = None
     debug = True 
 
+# If the debug option was specified, set the values for debug mode
 if debug:
     print(f"mp4_file={mp4_file}")
     print(f"delay_between_frames={delay_between_frames}")
@@ -169,23 +188,31 @@ if debug:
     print(f"frames_increment={frames_increment}")
     print(f"scale_image={scale_image}")
     print(f"random_frame_file={use_random_frame_file}")
+    print(f"play_directory={play_directory}")
     print(f"debug={debug}")
 
-# if not random, then file name is required
-if not use_random_frame_file:
-    if mp4_file is None:
-        print("Error: file name is required")
-        sys.exit()
+# Check to make sure files or directories exist for the options specified.
+# argparse returns None for mutually exclusive options not set, so use the
+# argument value to see which option was specified and do error checking.
+# Because of checks earlier in code that verify that at least one option 
+# was set, at least one of these tests will be executed.
 
-    # Exit if the file to play can't be found
-    if not(os.path.exists(mp4_file)):
-        print(f"{mp4_file} can not be found!")
-        sys.exit()
-else:
+# if random mode, make sure the folder for the files is found
+if use_random_frame_file:
     if not(os.path.exists(use_random_frame_file)):
-        print(f"Folder '{use_random_frame_file}' for random videos can not be found!")
-        sys.exit()
+        parser.error(f"Folder '{use_random_frame_file}' for random videos can not be found!")
+        
+# if play directory mode make sure the folder for the files is found
+if play_directory:
+    if not(os.path.exists(play_directory)):
+        parser.error(f"Folder '{play_directory}' for playing all files the directory can not be found!")
+        
+# if mp4 mode, make sure the file is found
+if mp4_file:
+    if not(os.path.exists(mp4_file)):
+        parser.error(f"Error: {mp4_file} can not be found!")
 
+     
 # Initialize PyGame
 print("Initializing PyGame...")
 pygame.init()
@@ -202,154 +229,184 @@ print(f'Screen width: {screen_width} height: {screen_height}')
 # Count the number of times the movie has been played
 movie_played = 0
 
+if play_directory:
+    next_file_function = get_next_file(play_directory,filetype='mp4')
+
 try:
-	# Loop forever - when the movie ends, start it again. Pressing ESC will stop the movie player
-	while True:
-	    # initialize loop variables
-	    play_to_end = True
-	    first_time = True
-	    frame_number = initial_frame
-	    movie_played += 1
-	    stop = False  # set true to exit forever loop
-	
-	    if use_random_frame_file:
-	        # choose a random .mp4 file
-	        list_of_files = os.listdir(use_random_frame_file)
-	        # remove non mp4 files
-	        list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
-	        if list_of_files == []:
-	            print(f"No mp4 files found in directory '{use_random_frame_file}'")
-	            sys.exit()
-	        mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
-	
-	    # Get the total number of frames in the video
-	    total_frames = get_frame_count(mp4_file)
-	
-	    if use_random_frame_file:
-	        # choose a random frame number
-	        # if long file, avoid beginning and end bits
-	        avoid_frames = 5*60*24  # five minutes of frames
-	        if total_frames > avoid_frames * 2 + 100:
-	            # long file
-	            frame_number = random.randint(avoid_frames, total_frames-avoid_frames)
-	        else:
-	            # short file
-	            frame_number = random.randint(1, total_frames-1)
+    # Loop forever as follows:
+    #   - In mp4 mode, play the movie over and over
+    #   - In play_directory mode, after one movie ends, select the next one, and 
+    #     after playing the last one, go back to the top of the directory. 
+    #   - In random mode, after displaying the frame, pick a new movie and new frame
+    while True:
+        # initialize loop variables
+        play_to_end = True
+        first_time = True
 	    
-	    if not use_random_frame_file:
-	        # print some stats 
-	        print(f"Playing {mp4_file}. Iteration {movie_played}.")
-	        duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
-	        playing_time = f"{duration:,.2f} {duration_units}"
-	        print(f"Time to play: {playing_time}")
+        # if an initial frame was specified on the command line
+        # only start with that frame for the first movie played
+        if movie_played == 0:
+            frame_number = initial_frame
+        else:
+            frame_number = 0
+	    
+        movie_played += 1
+	    
+        stop = False  # set true to exit forever loop
+	    
+        # If playing all files in the directory, the pick the next mp4 file to play
+        if play_directory:
+            mp4_file = next_file_function()
+            if mp4_file is None:
+                print(f"No mp4 files found in directory '{play_directory}'")
+                sys.exit()
+ 
+        # If playing random frames in random files, pick the file to play    
+        if use_random_frame_file:
+            # choose a random .mp4 file
+            list_of_files = os.listdir(use_random_frame_file)
+            # remove non mp4 files
+            list_of_files = [f for f in list_of_files if f.endswith(".mp4")]
+            if list_of_files == []:
+                print(f"No mp4 files found in directory '{use_random_frame_file}'")
+                sys.exit()
+            mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"
 	
+        # Get the total number of frames in the video
+        total_frames = get_frame_count(mp4_file)
+
+        # If playing random frames in random files, pick the frame to play
+        if use_random_frame_file:
+            # choose a random frame number
+            # if long file, avoid beginning and end bits
+            avoid_frames = 5*60*24  # five minutes of frames
+            if total_frames > avoid_frames * 2 + 100:
+                # long file
+                frame_number = random.randint(avoid_frames, total_frames-avoid_frames)
+            else:
+                # short file
+                frame_number = random.randint(1, total_frames-1)
+	    
+        if not use_random_frame_file:
+            # print some stats 
+            print(f"Playing {mp4_file}. Iteration {movie_played}.")
+            duration, duration_units = calculate_time_to_play(total_frames, delay_between_frames, frames_increment)
+            playing_time = f"{duration:,.2f} {duration_units}"
+            print(f"Time to play: {playing_time}")
 	
-	    # Loop to extract and display the frames
-	    while play_to_end and frame_number < total_frames:
+        # Loop to extract and display the frames
+        while play_to_end and frame_number < total_frames:
 	
-	        if use_random_frame_file:
-	            # don't loop if random file
-	            play_to_end = False
+            if use_random_frame_file:
+                # don't loop if random file
+                play_to_end = False
 	
-	        # construct the status message
-	        if use_random_frame_file:
-	            frame_message = f"Playback {mp4_file} Frame {frame_number:,} of {total_frames:,}"
-	        else:            
-	            percent_played = int((frame_number / total_frames) * 100)
-	            frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
+            # construct the status message
+            if use_random_frame_file:
+                # frame_message = f"Playback {mp4_file} Frame {frame_number:,} of {total_frames:,}"
+                frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,}"
+            else:            
+                percent_played = int((frame_number / total_frames) * 100)
+                frame_message = f"Playback {movie_played:,} Frame {frame_number:,} of {total_frames:,} ({percent_played}%)"
 	
-	        # Extract the frame from the video file
-	        frame_string, frame_size  = extract_frame(mp4_file, frame_number)        
-	        print(mp4_file, frame_message)
+            # Extract the frame from the video file
+            frame_string, frame_size  = extract_frame(mp4_file, frame_number)        
+            print(mp4_file, frame_message)
 	
-	         # display the frame 
-	        image = pygame.image.frombytes(frame_string,frame_size,'RGB',False)
+            # display the frame 
+            image = pygame.image.frombytes(frame_string,frame_size,'RGB',False)
 	        
-	        if scale_image:
-	            # Calculate the aspect ratio of the image and the screen
-	            image_aspect_ratio = image.get_width() / image.get_height()
-	            screen_aspect_ratio = screen_width / screen_height
-	            if first_time:  # only print this once
-	                print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
+            if scale_image:
+                # Calculate the aspect ratio of the image and the screen
+                image_aspect_ratio = image.get_width() / image.get_height()
+                screen_aspect_ratio = screen_width / screen_height
+                if first_time:  # only print this once
+                    print(f"Screen aspect ratio: {screen_aspect_ratio}, Image aspect ratio: {image_aspect_ratio}")
 	
-	            # Determine the scaling factor
-	            if image_aspect_ratio > screen_aspect_ratio:
-	                # Fit by width
-	                if frame_number == 0:  # only print this once
-	                    print("Scaling using fit by width")
-	                scale_factor = screen_width / image.get_width()
-	            else:
-	                # Fit by height
-	                if first_time:  # only print this once
-	                    print("Scaling using fit by height")
-	                scale_factor = screen_height / image.get_height()
+                # Determine the scaling factor
+                if image_aspect_ratio > screen_aspect_ratio:
+                    # Fit by width
+                    if frame_number == 0:  # only print this once
+                        print("Scaling using fit by width")
+                    scale_factor = screen_width / image.get_width()
+                else:
+                    # Fit by height
+                    if first_time:  # only print this once
+                        print("Scaling using fit by height")
+                    scale_factor = screen_height / image.get_height()
 	
-	            # Scale the image to fit the screen
-	            scaled_width = int(image.get_width()) * scale_factor
-	            scaled_height = int(image.get_height()) * scale_factor
-	            scaled_image = pygame.transform.scale(image, (scaled_width, scaled_height))
+                # Scale the image to fit the screen
+                scaled_width = int(image.get_width()) * scale_factor
+                scaled_height = int(image.get_height()) * scale_factor
+                scaled_image = pygame.transform.scale(image, (scaled_width, scaled_height))
 	
-	            if debug:
-	                print(f"Image width: {image.get_width()} height: {image.get_height()}")
-	                print(f"Scaled_image width: {scaled_width} height: {scaled_height}")
-	                if not use_random_frame_file:
-	                    file_info = f"{mp4_file} ({playing_time})"
-	                else:
-	                    file_info = f"{mp4_file}"
-	                add_text_to_image(scaled_image, file_info, frame_message)
+                if debug:
+                    print(f"Image width: {image.get_width()} height: {image.get_height()}")
+                    print(f"Scaled_image width: {scaled_width} height: {scaled_height}")
+                    if not use_random_frame_file:
+                        file_info = f"{mp4_file} ({playing_time})"
+                    else:
+                        file_info = f"{mp4_file}"
+                    add_text_to_image(scaled_image, file_info, frame_message)
 	
-	            # Determine where to place the scaled image so it's centered on the screen
-	            centered_width_position = int((screen_width - scaled_width)/2)
+                # Determine where to place the scaled image so it's centered on the screen
+                centered_width_position = int((screen_width - scaled_width)/2)
 	            
-	            # With the image centered, make the sides black
-	            screen.fill(BLACK_RGB)
+                # With the image centered, make the sides black
+                screen.fill(BLACK_RGB)
 	
-	            # Blit the scaled image onto the screen surface
-	            screen.blit(scaled_image, (centered_width_position, 0))
+                # Blit the scaled image onto the screen surface
+                screen.blit(scaled_image, (centered_width_position, 0))
 	        
-	        # scaled_image = False
-	        else:
-	            # fill screen to red for debugging
-	            screen.fill(RED_RGB)
+            # scaled_image = False
+            else:
+                # fill screen to red for debugging
+                screen.fill(RED_RGB)
 	
-	            # Blit the scaled image onto the screen surface
-	            screen.blit(image, (0,0))
+                # Blit the scaled image onto the screen surface
+                screen.blit(image, (0,0))
 	
-	        pygame.display.flip()
+            pygame.display.flip()
 	
-	        frame_number += frames_increment
-	        first_time = False
+            frame_number += frames_increment
+            first_time = False
 	
-	        # wait before displaying the next frame
-	        # do the delay in one second increments 
-	        # after each second, check to see if the user wants to quit
-	        for s in range(delay_between_frames):
-	            time.sleep(1)
+            # wait before displaying the next frame
+            # do the delay in one second increments 
+            # after each second, check to see if the user wants to quit
+            for s in range(delay_between_frames):
+                time.sleep(1)
 	
-	            # Check to see if the user wants to quit
-	            stop = False
-	            for event in pygame.event.get():
-	                if event.type == pygame.QUIT:
-	                    stop = True
-	                elif event.type == pygame.KEYDOWN:
-	                    if event.key == pygame.K_ESCAPE:
-	                        stop = True
+                # Check to see if the user wants to quit
+                stop = False
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        stop = True
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            stop = True
 	
-	            # If the user pressed ESC, exit the timer loop and stop the program
-	            if stop:
-	                break    
+                # If the user pressed ESC, exit the timer loop and stop the program
+                if stop:
+                    break    
 	        
-	        # If the user pressed ESC, exit the frame playing loop and stop the program        
-	        if stop:
-	            break        
-	
-	    # If the user pressed ESC exit the forever loop to stop the program
-	    if stop:
-	        break
+            # This is the end of the loop for the timer delay.
+            # If the user pressed ESC, exit the frame playing loop and stop the program        
+            if stop:
+                break        
+	            
+        # This is the end of the loop that plays the movie
+        # If the user pressed ESC exit the forever loop to stop the program
+        if stop:
+            break
+	    
+    # This is the end of the forever loop.
 
 except Exception as e:
-	with open('error.log', 'a') as file:
-		msg = traceback.format_exc()
-		file.write(f"An error occurred:\n {msg}\n")
-	
-pygame.quit()
+    with open('error.log', 'a') as file:
+        msg = traceback.format_exc()
+        file.write(f"An error occurred:\n {msg}\n")
+		
+finally:
+    # Always clean up pygame before exiting.
+    pygame.quit()

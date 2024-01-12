@@ -22,14 +22,11 @@ Before running the program, make sure to be in the slow-movie-player-python dire
 ```
 python3 slow-movie.py -h
 
-usage: slow-movie.py [-h] [-d DELAY] [-f FRAMES_INCREMENT] [-i INITIAL_FRAME] [-n] [-r [RANDOM]] [-x] [-t]
-                     [filename]
+usage: slow-movie.py [-h] [-d DELAY] [-f FRAMES_INCREMENT] [-i INITIAL_FRAME] [-n] [-x] [-t] [-m [MP4] | -p [PLAY_DIRECTORY] | -r
+                     [RANDOM]]
 
-Plays movies frames much slower than normal play or can play random frames from random movies. Great for small
-displays mounted on a wall or sitting on a desk.
-
-positional arguments:
-  filename              file name of movie to play
+Plays movies frames much slower than normal play or can play random frames from random movies. Great for small displays mounted on a wall
+or sitting on a desk.
 
 options:
   -h, --help            show this help message and exit
@@ -38,43 +35,53 @@ options:
   -f FRAMES_INCREMENT, --frames_increment FRAMES_INCREMENT
                         frame increment (frame=1 means play every frame, frame=10 means play every 10 frames)
   -i INITIAL_FRAME, --initial_frame INITIAL_FRAME
-                        initial frame to display when playing in non-random mode
+                        initial frame to display when playing the first movie in non-random mode
   -n, --no_scale        Do not scale movie frames to fit display
+  -x, --debug           Display debug messages
+  -t, --test_mode       Test mode: delay between frames: 1 second; frame increment: 10; scale image; random off; play directory off;
+                        debug mode on
+  -m [MP4], --mp4 [MP4]
+                        file name of movie to play
+  -p [PLAY_DIRECTORY], --play_directory [PLAY_DIRECTORY]
+                        Play every mp4 in the specified directory in order and repeat forever
   -r [RANDOM], --random [RANDOM]
                         Display random frames from random files in a directory
-  -x, --debug           Display debug messages
-  -t, --test_mode       Test mode: delay between frames: 1 second; frame increment: 10; scale image; random off;
-                        debug mode on
 
 More information and source code at https://github.com/makeralchemy/slow-movie-player-python
-
 ```
+
+Note that you can only specify one of the --mp4, --random, and --play_directory options. 
+They are mutually exclusive and you will get an error if you try to specify any combination of them.
 
 ### Command Line Examples
 
 Play movie.mp4 with one frame every minute
 
-     python slow-movie.py movie.mp4 --delay 60
+     python slow-movie.py --mp4 movie.mp4 --delay 60
 
 Play every 10th frame of movie.mp4 every second
 
-     python slow-movie.py movie.mp4 --delay 1 --frames_increment 10
+     python slow-movie.py --mp4 movie.mp4 --delay 1 --frames_increment 10
      
 Play every 10th frame of movie.mp4 every second starting at frame 42
 
-     python slow-movie.py movie.mp4 --delay 1 --frames_increment 10 --initial_frame 42
+     python slow-movie.py --mp4 movie.mp4 --delay 1 --frames_increment 10 --initial_frame 42
 
 Play movie.mp4, one frame every minute, with the debug messages (time to play, current frame, total frames, percent played)
 
-     python slow-movie.py movie.mp4 --delay 60 --debug
+     python slow-movie.py --mp4 movie.mp4 --delay 60 --debug
 
 Once a minute display a random frame from a random .mp4 file found in the folder video1
    
-     python slow-movie.py --delay 60 --random video1
+     python slow-movie.py --random video1 --delay 60
+
+Play all movies in sequence over and over from folder video5 with a three second delay between frames
+
+     python slow-movie.py --play_directory video5 --delay 3
 
 Play movie.mp4 in test mode (delay between frames: 1 second; frame increment: 10; scale image; debug mode on)
 
-     python slow-movie.py movie.mp4 --test_mode
+     python slow-movie.py --mp4 movie.mp4 --test_mode
 
 ### Stopping the Movie
 
