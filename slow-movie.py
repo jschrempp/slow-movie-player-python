@@ -36,7 +36,7 @@ def get_frame_count(video_filename):
 
     # Check if the video file was opened successfully
     if not cap.isOpened():
-        print("Error: Could not open video file to check total frames.")
+        print(f"Error: Could not open video file '{video_filename}' to check total frames.")
         return
 
     # Get the total number of frames in the video
@@ -53,7 +53,7 @@ def extract_frame(video_filename, frame_number):
 
     # Check if the video file was opened successfully
     if not cap.isOpened():
-        print("Error: Could not open video file.")
+        print(f"Error: Could not open video file '{video_filename}'.")
         return
 
     # Get the total number of frames in the video
@@ -61,7 +61,7 @@ def extract_frame(video_filename, frame_number):
 
     # Check if the specified frame number is valid
     if frame_number < 0 or frame_number >= total_frames:
-        print("Error: Invalid frame number: {frame_number:,}. Total frames:{total_frames:,}")
+        print("Error: Invalid frame number: {frame_number:,}. Total frames:{total_frames:,} in file '{video_filename}'")
         return
 
     # Set the frame number to the desired frame
@@ -72,7 +72,7 @@ def extract_frame(video_filename, frame_number):
 
     # Check if the frame was read successfully
     if not ret:
-        print("Error: Failed to read frame.")
+        print("Error: Failed to read frame {frame_number:,} in file '{video_file_name}'.")
         return
     
     frame_RGB = cv2.cvtColor(frame_original, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
@@ -91,10 +91,6 @@ def extract_frame(video_filename, frame_number):
         print(f"Frame {frame_number} extracted and saved to {output_filename}.")
 
     return frame_string, frame_size
-
-# Example usage:
-
-# total_frames = extract_frame(MP4_FILE, 5000)
 
 
 def add_text_to_image(image, left_text, right_text, font_size=20, text_color=(255, 255, 255)):    
@@ -125,9 +121,9 @@ def choose_random_file(directory, filetype):
     # remove non mp4 files
     list_of_files = [f for f in list_of_files if f.endswith("." + filetype)]
     if list_of_files == []:
-        print(f"No mp4 files found in directory '{directory}'")
+        print(f"No .{filetype} files found in directory '{directory}'")
         sys.exit()
-    random_mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"   
+    random_mp4_file = f"{use_random_frame_file}/{random.choice(list_of_files)}"  
     return random_mp4_file
     
 
