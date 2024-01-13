@@ -12,6 +12,8 @@ from file_cycler import get_next_file
 BLACK_RGB = (0, 0, 0)
 RED_RGB   = (255, 0, 0)
 
+ERROR_LOG = "error.log"  # Exceptions will be logged to this file
+
 def calculate_time_to_play(number_of_frames, time_between_frames, frames_per_iteration):
     seconds = (number_of_frames * time_between_frames) / frames_per_iteration
     minutes = seconds / 60
@@ -224,7 +226,10 @@ if mp4_file:
     if not(os.path.exists(mp4_file)):
         parser.error(f"Error: {mp4_file} can not be found!")
 
-     
+# delete the error log if it exists
+if os.path.exists(ERROR_LOG):
+    os.remove(ERROR_LOG)
+
 # Initialize PyGame
 print("Initializing PyGame...")
 pygame.init()
