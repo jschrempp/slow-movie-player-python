@@ -243,6 +243,9 @@ screen_width = display_info.current_w
 screen_height = display_info.current_h
 print(f'Screen width: {screen_width} height: {screen_height}')
 
+# hide the mouse cursor
+pygame.mouse.set_visible(False)
+
 # Count the number of times the movie has been played
 movie_played = 0
 
