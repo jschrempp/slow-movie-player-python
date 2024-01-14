@@ -130,6 +130,10 @@ def choose_random_file(directory, filetype):
     return random_mp4_file, len(list_of_files)
 
 
+class StopPlayingException(Exception):
+    """ Raise this exception to stop the player """
+    def __init__(self, message):
+        super().__init__(message)
     
 
 # main execution starts here
@@ -275,8 +279,6 @@ try:
 	    
         movie_played += 1
 	    
-        stop = False  # set true to exit forever loop
-	    
         # If playing all files in the directory, the pick the next mp4 file to play
         if play_directory:
             mp4_file = next_file_function()
@@ -399,29 +401,19 @@ try:
                 time.sleep(1)
 	
                 # Check to see if the user wants to quit
-                stop = False
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        stop = True
+                        raise StopPlayingException("Quit event")
                     elif event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
-                            stop = True
-	
-                # If the user pressed ESC, exit the timer loop and stop the program
-                if stop:
-                    break    
-	        
+                            raise StopPlayingException("ESC pressed")
+		        
             # This is the end of the loop for the timer delay.
-            # If the user pressed ESC, exit the frame playing loop and stop the program        
-            if stop:
-                break        
-	            
         # This is the end of the loop that plays the movie
-        # If the user pressed ESC exit the forever loop to stop the program
-        if stop:
-            break
-	    
     # This is the end of the forever loop.
+
+except StopPlayingException as e:
+    print(f"{e}")
 
 except Exception as e:
     with open('error.log', 'a') as file:
@@ -431,3 +423,4 @@ except Exception as e:
 finally:
     # Always clean up pygame before exiting.
     pygame.quit()
+    print("Slow movie player has ended")
